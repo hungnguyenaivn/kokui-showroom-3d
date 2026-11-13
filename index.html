@@ -1277,7 +1277,6 @@
       }
     }
     plant(11.5, 7.45, 1.5, 0xe9e4da, 'olive');     // between the tee shelf and the bookshelf
-    plant(11.55, 5.4, 1.3, 0x2a2c2e, 'leafy');     // by the TV
     plant(6.65, 0.7, 1.4, 0xc9b08a, 'leafy');      // beside the walnut sideboard
     // Small pots on the two cabinets
     [[5.4, 1.1, 0.35], [5.95, 1.235, 10.2]].forEach(([x, y, z]) => {
@@ -1598,6 +1597,97 @@
     bxz(xc - hw, zf, xc + hw, zf + 0.04, yc + hh, yc + hh + f, fr, g);
     bxz(xc - hw, zf, xc + hw, zf + 0.04, yc - hh - f, yc - hh, fr, g);
     bxz(xc - hw, zf, xc + hw, zf + 0.03, yc - hh, yc + hh, mat(0x3d4020, { roughness: 1 }), g);
+    scene.add(g);
+  }
+
+  // ---------- Cork-coloured fabric pinboard beside the TV, with pinned design sketches ----------
+  // 120 × 90 cm on the east wall between the TV and the pilaster; papers, photos and swatches drawn on its canvas.
+  {
+    const c = document.createElement('canvas'); c.width = 1200; c.height = 900;
+    const x2d = c.getContext('2d');
+    let seed = 61;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    x2d.fillStyle = '#b8936a'; x2d.fillRect(0, 0, 1200, 900);                         // cork-tone linen
+    for (let y = 0; y < 900; y += 3) { x2d.fillStyle = `rgba(90,62,35,${0.05 + rnd() * 0.05})`; x2d.fillRect(0, y, 1200, 1); }
+    for (let x = 0; x < 1200; x += 3) { x2d.fillStyle = `rgba(235,210,170,${0.03 + rnd() * 0.04})`; x2d.fillRect(x, 0, 1, 900); }
+    const pin = (x, y, col) => {
+      x2d.fillStyle = 'rgba(0,0,0,0.25)'; x2d.beginPath(); x2d.arc(x + 3, y + 3, 9, 0, Math.PI * 2); x2d.fill();
+      x2d.fillStyle = col; x2d.beginPath(); x2d.arc(x, y, 9, 0, Math.PI * 2); x2d.fill();
+      x2d.fillStyle = 'rgba(255,255,255,0.5)'; x2d.beginPath(); x2d.arc(x - 3, y - 3, 3, 0, Math.PI * 2); x2d.fill();
+    };
+    // Fashion sketch: a simple figure in a garment, drawn in pencil on cream paper
+    function sketch(x, y, w, h, rot, variant) {
+      x2d.save(); x2d.translate(x, y); x2d.rotate(rot);
+      x2d.fillStyle = 'rgba(0,0,0,0.22)'; x2d.fillRect(-w / 2 + 6, -h / 2 + 8, w, h);
+      x2d.fillStyle = '#f4efe4'; x2d.fillRect(-w / 2, -h / 2, w, h);
+      x2d.strokeStyle = '#3a3633'; x2d.lineWidth = 2.2; x2d.lineCap = 'round';
+      const cx = 0, top = -h / 2 + 40;
+      x2d.beginPath(); x2d.arc(cx, top, 14, 0, Math.PI * 2); x2d.stroke();                 // head
+      x2d.beginPath();
+      if (variant === 0) {                                                                   // long coat
+        x2d.moveTo(cx - 30, top + 22); x2d.lineTo(cx - 52, top + 230); x2d.lineTo(cx + 52, top + 230); x2d.lineTo(cx + 30, top + 22); x2d.closePath();
+        x2d.moveTo(cx, top + 24); x2d.lineTo(cx - 6, top + 230);
+      } else if (variant === 1) {                                                            // shirt + wide trousers
+        x2d.moveTo(cx - 34, top + 22); x2d.lineTo(cx - 38, top + 110); x2d.lineTo(cx + 38, top + 110); x2d.lineTo(cx + 34, top + 22); x2d.closePath();
+        x2d.moveTo(cx - 38, top + 112); x2d.lineTo(cx - 50, top + 260); x2d.moveTo(cx + 38, top + 112); x2d.lineTo(cx + 50, top + 260);
+        x2d.moveTo(cx, top + 112); x2d.lineTo(cx - 4, top + 260);
+      } else {                                                                               // dress
+        x2d.moveTo(cx - 26, top + 22); x2d.lineTo(cx - 22, top + 90); x2d.lineTo(cx - 70, top + 240); x2d.lineTo(cx + 70, top + 240); x2d.lineTo(cx + 22, top + 90); x2d.lineTo(cx + 26, top + 22);
+      }
+      x2d.stroke();
+      x2d.lineWidth = 1; x2d.strokeStyle = 'rgba(58,54,51,0.5)';
+      for (let i = 0; i < 4; i++) { x2d.beginPath(); x2d.moveTo(-w / 2 + 20, h / 2 - 40 + i * 9); x2d.lineTo(-w / 2 + 20 + 60 + rnd() * 60, h / 2 - 40 + i * 9); x2d.stroke(); }
+      x2d.restore();
+      pin(x + Math.sin(rot) * h / 2 * -1, y - h / 2 + 14, ['#c62f2f', '#2a4a8a', '#e2c33a'][variant]);
+    }
+    function photo(x, y, w, h, rot, cols) {
+      x2d.save(); x2d.translate(x, y); x2d.rotate(rot);
+      x2d.fillStyle = 'rgba(0,0,0,0.25)'; x2d.fillRect(-w / 2 + 5, -h / 2 + 6, w, h);
+      x2d.fillStyle = '#faf8f3'; x2d.fillRect(-w / 2, -h / 2, w, h);
+      const gr = x2d.createLinearGradient(0, -h / 2, 0, h / 2);
+      gr.addColorStop(0, cols[0]); gr.addColorStop(1, cols[1]);
+      x2d.fillStyle = gr; x2d.fillRect(-w / 2 + 10, -h / 2 + 10, w - 20, h - 34);
+      x2d.restore();
+      pin(x, y - h / 2 + 12, '#1d1d1f');
+    }
+    function swatch(x, y, s, rot, col) {
+      x2d.save(); x2d.translate(x, y); x2d.rotate(rot);
+      x2d.fillStyle = 'rgba(0,0,0,0.22)'; x2d.fillRect(-s / 2 + 4, -s / 2 + 5, s, s);
+      x2d.fillStyle = col; x2d.fillRect(-s / 2, -s / 2, s, s);
+      x2d.strokeStyle = 'rgba(255,255,255,0.12)';
+      for (let i = -s / 2; i < s / 2; i += 4) { x2d.beginPath(); x2d.moveTo(-s / 2, i); x2d.lineTo(s / 2, i); x2d.stroke(); }
+      x2d.restore();
+      pin(x, y - s / 2 + 10, '#f4f2ee');
+    }
+    sketch(170, 300, 210, 300, -0.04, 0);
+    sketch(420, 330, 210, 320, 0.03, 1);
+    sketch(1010, 320, 210, 300, 0.05, 2);
+    photo(690, 200, 230, 170, -0.03, ['#c9b08a', '#6b5a44']);
+    photo(700, 420, 200, 150, 0.04, ['#5e6b4e', '#2f3a24']);
+    photo(250, 700, 220, 160, 0.03, ['#e9e4da', '#9a9488']);
+    [[560, 650, '#5e6b4e'], [660, 690, '#c9b08a'], [760, 650, '#3b4a63'], [860, 690, '#8a5a34'], [960, 650, '#e9e4da']]
+      .forEach(([x, y, col], i) => swatch(x, y, 90, (i - 2) * 0.05, col));
+    x2d.fillStyle = '#f4efe4'; x2d.fillRect(1000, 560, 150, 230);                             // note card
+    x2d.fillStyle = '#3a3633'; x2d.font = '600 26px "IBM Plex Mono", monospace';
+    x2d.fillText('SS 27', 1022, 610);
+    x2d.font = '18px "IBM Plex Mono", monospace';
+    ['linen / ramie', 'wool twill', 'washed cotton', 'olive · oat · ink'].forEach((t, i) => x2d.fillText(t, 1018, 650 + i * 30));
+    pin(1075, 575, '#c62f2f');
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+
+    const g = new THREE.Group();
+    const xw = W - 0.11, zc = 5.55, yc = 1.35, hw = 0.6, hh = 0.45, f = 0.02;
+    const board = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2, hh * 2), mat(0xffffff, { map: tex, roughness: 0.95 }));
+    board.rotation.y = -Math.PI / 2;                                    // faces west, towards the table
+    board.position.set(xw - 0.031, yc, zc);
+    g.add(board);
+    const oak = mat(0xffffff, { map: oakTexture(), roughness: 0.55 });
+    bxz(xw - 0.035, zc - hw - f, xw, zc - hw, yc - hh - f, yc + hh + f, oak, g);
+    bxz(xw - 0.035, zc + hw, xw, zc + hw + f, yc - hh - f, yc + hh + f, oak, g);
+    bxz(xw - 0.035, zc - hw, xw, zc + hw, yc + hh, yc + hh + f, oak, g);
+    bxz(xw - 0.035, zc - hw, xw, zc + hw, yc - hh - f, yc - hh, oak, g);
+    bxz(xw - 0.03, zc - hw, xw, zc + hw, yc - hh, yc + hh, mat(0x8a6a48, { roughness: 1 }), g);
     scene.add(g);
   }
 
