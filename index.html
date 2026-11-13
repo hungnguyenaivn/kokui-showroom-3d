@@ -1692,7 +1692,7 @@
   }
 
   // ---------- Soft impasto canvas on the south wall facing the café corner ----------
-  // 90 × 120 cm, unframed gallery canvas (after the reference photo): lavender-grey ground, thick white
+  // 120 × 160 cm, unframed gallery canvas (after the reference photo): lavender-grey ground, thick white
   // palette-knife dabs, blush pink, lilac, pale gold, smoky grey and a few cobalt touches lower left.
   {
     const c = document.createElement('canvas'); c.width = 900; c.height = 1200;
@@ -1731,7 +1731,7 @@
     const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
     tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
     const g = new THREE.Group();
-    const zw = D - 0.11, xc = 9.7, yc = 1.6, hw = 0.45, hh = 0.6, dep = 0.035;
+    const zw = D - 0.11, xc = 9.7, yc = 1.65, hw = 0.6, hh = 0.8, dep = 0.04;   // 120 × 160 cm
     const art = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2, hh * 2), mat(0xffffff, { map: tex, roughness: 0.85 }));
     art.rotation.y = Math.PI;                                       // faces north, towards the seats
     art.position.set(xc, yc, zw - dep - 0.001);
