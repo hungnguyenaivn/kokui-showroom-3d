@@ -118,6 +118,7 @@
       <button id="v-fitting" data-view="fitting">Gương soi</button>
       <button id="v-stock" data-view="stock">Kho hàng</button>
       <button id="v-lounge" data-view="lounge">Góc sofa</button>
+      <button id="v-balcony2" data-view="terrace" class="wide">Ban công</button>
     </div>
   </section>
 
@@ -295,10 +296,24 @@
   building.add(floor);
   bxz(0.1, 0.1, 1.75, 4.0, 0, 0.006, M.tile, building);          // WC tiles
 
-  // Balcony (south, in front of axis 1)
-  bxz(0, D + 0.1, W, D + 0.85, -0.12, -0.02, M.wallCut, building);
-  bxz(0, D + 0.83, W, D + 0.85, -0.02, 1.0, M.glass, building);
-  bxz(0, D + 0.8, W, D + 0.86, 1.0, 1.04, M.frame, building);
+  // Balcony (south, in front of axis 1), widened to 1.5 m: tiled slab, glass balustrade on three sides
+  const BD = 1.5;
+  bxz(0, D + 0.1, W, D + 0.1 + BD, -0.12, -0.02, M.wallCut, building);
+  {
+    const balMat = M.floor.clone();                  // same tile, repeat matched to the balcony's size
+    balMat.map = M.floor.map.clone();
+    balMat.map.repeat.set(W / 3.2, (BD - 0.02) / 3.2);
+    balMat.map.needsUpdate = true;
+    const bt = new THREE.Mesh(new THREE.PlaneGeometry(W, BD - 0.02), balMat);
+    bt.rotation.x = -Math.PI / 2; bt.position.set(W / 2, -0.018, D + 0.11 + BD / 2); bt.receiveShadow = true;
+    building.add(bt);
+  }
+  bxz(0, D + 0.08 + BD, W, D + 0.1 + BD, -0.02, 1.0, M.glass, building);
+  bxz(0, D + 0.06 + BD, W, D + 0.12 + BD, 1.0, 1.04, M.frame, building);
+  [[0, 0.02], [W - 0.02, W]].forEach(([a, b]) => {
+    bxz(a, D + 0.11, b, D + 0.08 + BD, -0.02, 1.0, M.glass, building);
+    bxz(a - 0.02, D + 0.11, b + 0.02, D + 0.12 + BD, 1.0, 1.04, M.frame, building);
+  });
 
   // U-shaped stair around the lift: 21 risers of 0.15 m
   const R = 0.15;
@@ -1194,6 +1209,54 @@
     scene.add(g);
   }
 
+  // ---------- Balcony planting on the blank stretches of the facade ----------
+  // Solid wall between openings: x 1.4–3.24, 4.98–5.75 (up to the facade column), 8.8–10.6.
+  {
+    const g = new THREE.Group();
+    const fibre = mat(0x3a3d3f, { roughness: 0.8 });
+    const terracotta = mat(0xb5714c, { roughness: 0.85 });
+    const soil = mat(0x3b2a1e, { roughness: 1 });
+    const leafA = mat(0x4f7d3a, { roughness: 0.85 }), leafB = mat(0x6a9a46, { roughness: 0.85 });
+    const olive = mat(0x7d8f6a, { roughness: 0.9 }), trunkM = mat(0x5a4632, { roughness: 0.9 });
+    const zw = D + 0.11;                                       // outer face of the facade
+    const blob = (x, y, z, r, m, sy = 0.7) => {
+      const b = new THREE.Mesh(new THREE.IcosahedronGeometry(r, 1), m);
+      b.position.set(x, y, z); b.scale.y = sy; g.add(b);
+    };
+    // Long fibre-cement trough with low shrubs and grasses
+    function trough(x1, x2) {
+      bxz(x1, zw + 0.04, x2, zw + 0.5, -0.02, 0.5, fibre, g);
+      bxz(x1 + 0.03, zw + 0.07, x2 - 0.03, zw + 0.47, 0.5, 0.505, soil, g);
+      for (let x = x1 + 0.18, k = 0; x < x2 - 0.1; x += 0.28, k++) {
+        blob(x, 0.68 + (k % 2) * 0.06, zw + 0.27, 0.2 + (k % 3) * 0.03, k % 2 ? leafA : leafB);
+        if (k % 2 === 0) for (let j = -2; j <= 2; j++) {        // grass tufts
+          const blade = new THREE.Mesh(new THREE.ConeGeometry(0.015, 0.5, 4), leafB);
+          blade.position.set(x + 0.12 + j * 0.02, 0.75, zw + 0.27 + j * 0.03);
+          blade.rotation.z = j * 0.15; g.add(blade);
+        }
+      }
+    }
+    // Tall potted tree
+    function tree(x, z, h, kind) {
+      const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.26, 0.2, 0.55, 28), kind === 'olive' ? terracotta : fibre);
+      pot.position.set(x, 0.255, z); g.add(pot);
+      const trunk = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.035, h * 0.65, 8), trunkM);
+      trunk.position.set(x, 0.53 + h * 0.32, z); g.add(trunk);
+      for (let k = 0; k < 12; k++) {
+        const a = k * 2.4, r = 0.12 + (k % 3) * 0.1;
+        blob(x + Math.cos(a) * r, 0.53 + h * (0.55 + 0.45 * k / 12), z + Math.sin(a) * r,
+             kind === 'olive' ? 0.14 : 0.2, kind === 'olive' ? olive : (k % 2 ? leafA : leafB), kind === 'olive' ? 0.75 : 0.5);
+      }
+    }
+    trough(1.5, 3.12);
+    tree(5.35, zw + 0.4, 1.7, 'olive');
+    trough(8.92, 10.48);
+    tree(0.32, zw + 0.55, 1.2, 'leafy');                       // corners, clear of the windows
+    tree(11.68, zw + 0.55, 1.2, 'leafy');
+    g.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+    scene.add(g);
+  }
+
   // ---------- Photo corner: camera on tripod + two round LED lights between columns B3 and B2 ----------
   // Everything aims west at the brown feature wall (x = 3.33), centred on z = 5.3.
   const studio = new THREE.Group();
@@ -1328,6 +1391,7 @@
     fitting:   { pos: [4.0, 1.6, 7.9],    target: [0.9, 1.1, 9.0] },
     stock:     { pos: [8.4, 1.9, 3.2],    target: [11.2, 0.9, 1.4] },
     lounge:    { pos: [7.3, 1.7, 7.5],    target: [10.6, 0.6, 9.6] },
+    terrace:   { pos: [13.6, 2.6, D + 4.6], target: [6.5, 0.6, D + 0.6] },
   };
   let tween = null;
   function goTo(name) {
