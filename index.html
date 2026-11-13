@@ -467,25 +467,23 @@
   }
 
   // ---------- Low walnut shelf on the brown wall, record player on top ----------
-  // 180 × 75 × 35 cm, three boards on two plank uprights and a slim centre post (per reference photo).
+  // 240 × 50 × 35 cm, two tiers: a low shelf and the top board, on plank uprights and a slim centre post.
   // Local space: length along x, back at z = 0, front towards +z; rotated so the front faces east.
   {
     const g = new THREE.Group();
     const walnut = mat(0xffffff, { map: oakTexture('#6b4428'), roughness: 0.6 });
-    const L = 0.9, dep = 0.35, th = 0.03;
+    const L = 1.2, dep = 0.35, th = 0.03;
     const board = y => bxz(-L, 0, L, dep, y, y + th, walnut, g);
-    board(0.03); board(0.39); board(0.72);
-    [-0.58, 0.58].forEach(x => {
-      bxz(x - 0.065, 0.05, x + 0.065, dep - 0.05, 0.06, 0.39, walnut, g);
-      bxz(x - 0.065, 0.05, x + 0.065, dep - 0.05, 0.42, 0.72, walnut, g);
+    board(0.03); board(0.47);
+    [-0.8, 0.8].forEach(x => {
+      bxz(x - 0.065, 0.05, x + 0.065, dep - 0.05, 0.06, 0.47, walnut, g);
       bxz(x - 0.05, 0.06, x + 0.05, dep - 0.06, 0, 0.03, walnut, g);    // feet
     });
-    bxz(-0.015, dep / 2 - 0.015, 0.015, dep / 2 + 0.015, 0.06, 0.39, walnut, g);
-    bxz(-0.015, dep / 2 - 0.015, 0.015, dep / 2 + 0.015, 0.42, 0.72, walnut, g);
+    bxz(-0.015, dep / 2 - 0.015, 0.015, dep / 2 + 0.015, 0.06, 0.47, walnut, g);
 
     // Record player
     const black = mat(0x151617, { roughness: 0.35 });
-    const top = 0.75, cx = 0.05, cz = dep / 2;
+    const top = 0.5, cx = 0.05, cz = dep / 2;
     bxz(cx - 0.23, cz - 0.17, cx + 0.23, cz + 0.17, top, top + 0.09, walnut, g);
     bxz(cx - 0.225, cz - 0.165, cx + 0.225, cz + 0.165, top + 0.09, top + 0.095, black, g);
     const disc = (r, h, y, m, x = cx - 0.05) => {
@@ -500,14 +498,31 @@
     arm.position.set(cx + 0.13, top + 0.14, cz + 0.07);
     arm.rotation.set(Math.PI / 2, 0, 0.35);
     g.add(arm);
-    // A few record sleeves lying on the middle shelf
+    // Records filed upright in the lower tier, and a few sleeves lying flat
+    const SLEEVES = [0x2f4858, 0xd9c7a7, 0x8c3b2a, 0x1f1f1f, 0xe2c33a, 0xf1eee8, 0x5e6b4e, 0xc62f2f, 0x1f1f1f, 0x9fc9e0];
+    for (let i = 0; i < 26; i++) {
+      const x = 0.1 + i * 0.024;
+      bxz(x, 0.02, x + 0.007, 0.33, 0.06, 0.37, mat(SLEEVES[(i * 7) % SLEEVES.length], { roughness: 0.8 }), g);
+    }
     [0x2f4858, 0xd9c7a7, 0x8c3b2a, 0x1f1f1f].forEach((c, i) =>
-      bxz(-0.47 - 0.002 * i, 0.02 + 0.003 * i, -0.15 + 0.004 * i, 0.33, 0.42 + i * 0.006, 0.426 + i * 0.006, mat(c, { roughness: 0.8 }), g));
+      bxz(-0.62 - 0.002 * i, 0.02 + 0.003 * i, -0.3 + 0.004 * i, 0.33, 0.06 + i * 0.006, 0.066 + i * 0.006, mat(c, { roughness: 0.8 }), g));
 
     g.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
     g.rotation.y = Math.PI / 2;
-    g.position.set(3.4, 0, 5.3);
+    g.position.set(3.4, 0, 5.35);
     scene.add(g);
+
+    // Ivory wool rug in front of the brown wall, 1.9 × 2.6 m: a light, warm ground that lifts the
+    // deep brown and bounces the photo lights back onto the set.
+    const c = document.createElement('canvas'); c.width = 256; c.height = 352;
+    const cx2 = c.getContext('2d');
+    cx2.fillStyle = '#ebe3d3'; cx2.fillRect(0, 0, 256, 352);
+    let seed = 13;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    for (let i = 0; i < 5000; i++) { cx2.fillStyle = `rgba(${rnd() < 0.5 ? '150,130,105' : '255,250,240'},0.13)`; cx2.fillRect(rnd() * 256, rnd() * 352, 2, 2); }
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+    const rug = bxz(3.55, 4.15, 5.45, 6.75, 0.002, 0.016, mat(0xffffff, { map: tex, roughness: 1 }), scene);
+    rug.castShadow = false;
   }
 
   // ---------- Work desk in the north-east corner (axis C-4) ----------
