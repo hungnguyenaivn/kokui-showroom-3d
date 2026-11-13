@@ -1680,6 +1680,100 @@
     scene.add(g);
   }
 
+  // ---------- Soft impasto canvas on the south wall facing the café corner ----------
+  // 90 × 120 cm, unframed gallery canvas (after the reference photo): lavender-grey ground, thick white
+  // palette-knife dabs, blush pink, lilac, pale gold, smoky grey and a few cobalt touches lower left.
+  {
+    const c = document.createElement('canvas'); c.width = 900; c.height = 1200;
+    const x2d = c.getContext('2d');
+    let seed = 71;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    const bg = x2d.createLinearGradient(0, 0, 900, 1200);
+    bg.addColorStop(0, '#cbbfbd'); bg.addColorStop(0.5, '#c9c4c8'); bg.addColorStop(1, '#bdb8be');
+    x2d.fillStyle = bg; x2d.fillRect(0, 0, 900, 1200);
+    // Dab: a cluster of short knife strokes in one hue around (cx, cy)
+    function dabs(cx, cy, spread, n, rgb, alpha, len = 26) {
+      for (let i = 0; i < n; i++) {
+        const x = cx + (rnd() - 0.5) * spread * 2, y = cy + (rnd() - 0.5) * spread * 2;
+        const a = rnd() * Math.PI, l = len * (0.4 + rnd());
+        x2d.strokeStyle = `rgba(${rgb},${alpha * (0.5 + rnd() * 0.5)})`;
+        x2d.lineWidth = 3 + rnd() * 9; x2d.lineCap = 'round';
+        x2d.beginPath(); x2d.moveTo(x, y); x2d.lineTo(x + Math.cos(a) * l, y + Math.sin(a) * l); x2d.stroke();
+      }
+    }
+    const WHITE = '250,248,244', PINK = '222,160,182', LILAC = '178,164,204', GOLD = '232,222,170', SAND = '206,186,160',
+      SMOKE = '96,100,112', COBALT = '70,110,190', MAGENTA = '196,70,120', MAUVE = '200,176,186';
+    dabs(450, 150, 380, 300, MAUVE, 0.35, 40);
+    dabs(150, 160, 90, 160, WHITE, 0.7);  dabs(760, 220, 110, 180, WHITE, 0.7);
+    dabs(380, 360, 90, 160, PINK, 0.55);  dabs(760, 420, 90, 140, LILAC, 0.45);
+    dabs(820, 380, 60, 60, SMOKE, 0.35);
+    dabs(120, 620, 140, 260, WHITE, 0.75); dabs(360, 600, 110, 160, SMOKE, 0.3);
+    dabs(450, 620, 100, 180, GOLD, 0.5);  dabs(560, 660, 110, 180, '238,212,214', 0.6);
+    dabs(330, 760, 90, 130, LILAC, 0.55); dabs(470, 780, 70, 90, MAGENTA, 0.35);
+    dabs(700, 700, 110, 160, SAND, 0.5);  dabs(760, 760, 90, 120, SMOKE, 0.35);
+    dabs(70, 760, 60, 120, COBALT, 0.55); dabs(60, 900, 50, 90, '120,160,220', 0.5);
+    dabs(320, 900, 160, 300, WHITE, 0.8); dabs(620, 880, 120, 160, SMOKE, 0.4);
+    dabs(250, 1060, 120, 160, SAND, 0.5); dabs(240, 1080, 70, 80, '110,100,80', 0.3);
+    dabs(560, 1130, 50, 60, COBALT, 0.45); dabs(800, 1000, 100, 120, '200,196,204', 0.5);
+    dabs(450, 1000, 380, 500, WHITE, 0.25, 18);
+    for (let i = 0; i < 9000; i++) { x2d.fillStyle = `rgba(${rnd() < 0.5 ? '90,85,90' : '255,255,255'},0.06)`; x2d.fillRect(rnd() * 900, rnd() * 1200, 2, 2); }
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+    tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
+    const g = new THREE.Group();
+    const zw = D - 0.11, xc = 9.7, yc = 1.6, hw = 0.45, hh = 0.6, dep = 0.035;
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2, hh * 2), mat(0xffffff, { map: tex, roughness: 0.85 }));
+    art.rotation.y = Math.PI;                                       // faces north, towards the seats
+    art.position.set(xc, yc, zw - dep - 0.001);
+    g.add(art);
+    bxz(xc - hw, zw - dep, xc + hw, zw, yc - hh, yc + hh, mat(0xd8d3d3, { roughness: 0.9 }), g);   // canvas edges
+    scene.add(g);
+  }
+
+  // ---------- Wall-mounted oak book ledges above the two wall garment racks ----------
+  {
+    const g = new THREE.Group();
+    const oak = mat(0xffffff, { map: oakTexture(), roughness: 0.55 });
+    const steel = mat(0x151617, { roughness: 0.45, metalness: 0.4 });
+    const cache = {};
+    const cm = c => cache[c] || (cache[c] = mat(c, { roughness: 0.8 }));
+    const BOOKS = [0xe9e4da, 0x1d1d1f, 0xc9b08a, 0x5e6b4e, 0x6f2f2a, 0x2a4a8a, 0xf4f2ee, 0x8a5a34, 0xd9c7a7, 0xc62f2f];
+    let seed = 83;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    // Shelf along u (x on the south wall, z on the west wall); wall-normal depth 0.22 m
+    function ledge(u1, u2, y, wallAt, inward, alongX) {
+      const box = (a1, a2, d1, d2, y1, y2, m) => alongX
+        ? bxz(a1, wallAt + inward * d1, a2, wallAt + inward * d2, y1, y2, m, g)
+        : bxz(wallAt + inward * d1, a1, wallAt + inward * d2, a2, y1, y2, m, g);
+      box(u1, u2, 0, 0.22, y, y + 0.03, oak);
+      [u1 + 0.12, u2 - 0.14].forEach(u => {                      // black L brackets
+        box(u, u + 0.02, 0, 0.2, y - 0.025, y, steel);
+        box(u, u + 0.02, 0, 0.02, y - 0.15, y, steel);
+      });
+      // Books: a run of spines, a short flat stack, a face-out cover, a small ceramic
+      let u = u1 + 0.04;
+      const runEnd = u1 + (u2 - u1) * 0.45;
+      while (u < runEnd) {
+        const t = 0.022 + rnd() * 0.02, h = 0.2 + rnd() * 0.08;
+        box(u, u + t, 0.03, 0.19, y + 0.03, y + 0.03 + h, cm(BOOKS[Math.floor(rnd() * BOOKS.length)]));
+        u += t + 0.003;
+      }
+      const sx = runEnd + 0.06;
+      for (let k = 0; k < 3; k++) box(sx, sx + 0.2, 0.03, 0.18, y + 0.03 + k * 0.03, y + 0.058 + k * 0.03, cm(BOOKS[(k * 3 + 2) % BOOKS.length]));
+      const fx = sx + 0.3;
+      if (fx + 0.2 < u2 - 0.05) box(fx, fx + 0.2, 0.02, 0.035, y + 0.03, y + 0.29, cm(BOOKS[Math.floor(rnd() * BOOKS.length)]));
+      const vx = Math.min(u2 - 0.08, fx + 0.3);
+      const v = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.05, 0.14, 18), cm(0xb5714c));
+      if (alongX) v.position.set(vx, y + 0.1, wallAt + inward * 0.11); else v.position.set(wallAt + inward * 0.11, y + 0.1, vx);
+      g.add(v);
+    }
+    [1.95, 2.32].forEach(y => {
+      ledge(1.5, 2.9, y, D - 0.11, -1, true);       // south wall, above the window-side rack
+      ledge(8.12, 9.58, y, 0.11, 1, false);         // west wall, above the entrance rack
+    });
+    g.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+    scene.add(g);
+  }
+
   // ---------- Photo corner: camera on tripod + two round LED lights between columns B3 and B2 ----------
   // Everything aims west at the brown feature wall (x = 3.33), centred on z = 5.3.
   const studio = new THREE.Group();
