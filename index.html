@@ -1013,8 +1013,7 @@
     scene.add(g);
   }
 
-  // ---------- Café lounge in front of the bookshelf: Togo-style seats, cloud table, aluminium side table, jute rug ----------
-  // Leather loveseat faces the balcony (back to the room); cream fireside chair faces the bookshelf.
+  // ---------- Café corner in front of the bookshelf: sling armchair + ash chair, cloud table, aluminium side table, jute rug ----------
   {
     const g = new THREE.Group();
     // Jute rug with a tight basket weave, 2.0 × 2.6 m
@@ -1031,33 +1030,59 @@
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(6.5, 5); tex.encoding = THREE.sRGBEncoding;
       bxz(8.8, 8.4, 11.4, 10.4, 0.002, 0.014, mat(0xffffff, { map: tex, roughness: 1 }), g);
     }
-    // Togo-style low lounge seat (per reference photo), built facing local -z: puffy quilted rolls
-    // stepping up from a low front roll to the reclined back, split along the width like the stitching.
-    function togo(w, x, z, rotY, m) {
-      const t = new THREE.Group();
-      const ROLLS = [[-0.3, 0.16, 0.16], [-0.08, 0.22, 0.2], [0.16, 0.34, 0.22], [0.32, 0.56, 0.19], [0.38, 0.74, 0.14]];
-      const segs = Math.max(2, Math.round(w / 0.45)), sw = (w - 0.2) / segs;
-      ROLLS.forEach(([rz, ry, r]) => {
-        for (let k = 0; k < segs; k++) {
-          const len = Math.max(0.01, sw - 2 * r * 0.55);
-          const c = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 16), m);
-          c.rotation.z = Math.PI / 2;
-          c.position.set(-w / 2 + 0.1 + sw * (k + 0.5), ry, rz);
-          c.scale.set(1, 1, 0.85);
-          t.add(c);
-        }
-      });
-      [-1, 1].forEach(sd => {                                    // soft side arms
-        const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.45, 6, 16), m);
-        arm.rotation.x = Math.PI / 2 - 0.35;
-        arm.position.set(sd * (w / 2 - 0.08), 0.3, 0.05);
-        t.add(arm);
-      });
-      t.position.set(x, 0, z); t.rotation.y = rotY;
-      g.add(t);
+    // Café chairs from the reference photo: a chrome-tube sling armchair (Wassily-style) and a light ash chair.
+    // Both are built facing local -z.
+    const chrome = mat(0xd5dadd, { metalness: 0.9, roughness: 0.2 });
+    function tube(c, a, b, r = 0.011) {
+      const p = new THREE.Vector3(...a), q = new THREE.Vector3(...b);
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(r, r, p.distanceTo(q), 10), chrome);
+      m.position.copy(p).add(q).multiplyScalar(0.5);
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), q.clone().sub(p).normalize());
+      c.add(m);
     }
-    togo(1.5, 10.1, 8.4, Math.PI, mat(0x3a2820, { roughness: 0.45 }));          // dark brown leather loveseat → balcony
-    togo(0.9, 8.95, 9.55, -Math.PI / 2, mat(0xe9e3d8, { roughness: 0.95 }));    // cream fireside chair → bookshelf
+    function strap(c, a, b, w, m, alongX = true) {   // flat sling between two points, w wide
+      const p = new THREE.Vector3(...a), q = new THREE.Vector3(...b), len = p.distanceTo(q);
+      const geo = alongX ? new THREE.BoxGeometry(w, 0.006, len) : new THREE.BoxGeometry(0.006, w, len);
+      const s = new THREE.Mesh(geo, m);
+      s.position.copy(p).add(q).multiplyScalar(0.5);
+      s.lookAt(q.clone().add(c.position));
+      c.add(s);
+    }
+    function slingChair(x, z, rotY) {
+      const c = new THREE.Group(), hw = 0.37;
+      const canvas = mat(0xb3a993, { roughness: 0.9 });
+      [-hw, hw].forEach(sx => {
+        tube(c, [sx, 0.015, -0.32], [sx, 0.015, 0.3]);                 // floor runner
+        tube(c, [sx, 0.015, -0.32], [sx, 0.6, -0.3]);                  // front post
+        tube(c, [sx, 0.6, -0.3], [sx, 0.6, 0.22]);                     // arm rail
+        tube(c, [sx, 0.015, 0.3], [sx, 0.8, 0.36]);                    // back post
+        tube(c, [sx, 0.42, -0.28], [sx, 0.34, 0.2]);                   // seat rail
+      });
+      tube(c, [-hw, 0.42, -0.28], [hw, 0.42, -0.28]);
+      tube(c, [-hw, 0.34, 0.2], [hw, 0.34, 0.2]);
+      tube(c, [-hw, 0.8, 0.36], [hw, 0.8, 0.36]);
+      strap(c, [0, 0.42, -0.28], [0, 0.34, 0.2], 0.7, canvas);             // seat sling
+      strap(c, [0, 0.4, 0.23], [0, 0.76, 0.34], 0.7, canvas);              // back sling
+      [-hw, hw].forEach(sx => strap(c, [sx, 0.5, -0.24], [sx, 0.5, 0.18], 0.1, canvas, false)); // arm straps
+      c.position.set(x, 0, z); c.rotation.y = rotY;
+      c.updateMatrixWorld();
+      g.add(c);
+    }
+    function woodChair(x, z, rotY) {
+      const c = new THREE.Group(), ash = mat(0xffffff, { map: oakTexture('#e3cfac'), roughness: 0.6 });
+      const hw = 0.22, d = 0.24, l = 0.035;
+      [[-hw, -d], [hw - l, -d], [-hw, d - l], [hw - l, d - l]].forEach(([lx, lz], i) =>
+        bxz(lx, lz, lx + l, lz + l, 0, i > 1 ? 0.82 : 0.45, ash, c));
+      bxz(-hw, -d, hw, d, 0.43, 0.46, ash, c);                                    // seat
+      [0.6, 0.76].forEach(y => bxz(-hw + l, d - l, hw - l, d, y, y + 0.05, ash, c));  // back rails
+      bxz(-hw + l, -d, hw - l, -d + l, 0.12, 0.15, ash, c);                       // stretchers
+      bxz(-hw, -d + l, -hw + l, d - l, 0.12, 0.15, ash, c);
+      bxz(hw - l, -d + l, hw, d - l, 0.12, 0.15, ash, c);
+      c.position.set(x, 0, z); c.rotation.y = rotY;
+      g.add(c);
+    }
+    slingChair(10.1, 8.6, Math.PI);       // armchair, back to the room, facing the balcony
+    woodChair(9.2, 9.55, -Math.PI / 2);   // ash chair, facing the bookshelf
 
     // Cloud coffee table: outline of four overlapping discs, cream lacquer, chunky round legs, top at 38 cm
     {
