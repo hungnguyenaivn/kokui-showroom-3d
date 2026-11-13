@@ -1433,6 +1433,69 @@
     scene.add(g);
   }
 
+  // ---------- Thread artwork on the brown wall, above the record shelf ----------
+  // About 190 × 115 cm in a slim black frame (after the reference photo): graded blue → blush → burgundy
+  // thread bands on raw linen, crossed by interlocking woven frames. Drawn procedurally on a canvas.
+  {
+    const c = document.createElement('canvas'); c.width = 1000; c.height = 600;
+    const x2d = c.getContext('2d');
+    let seed = 31;
+    const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+    x2d.fillStyle = '#d9cdb7'; x2d.fillRect(0, 0, 1000, 600);                        // linen
+    for (let i = 0; i < 9000; i++) { x2d.fillStyle = `rgba(${rnd() < 0.5 ? '150,135,110' : '245,238,222'},0.15)`; x2d.fillRect(rnd() * 1000, rnd() * 600, 2, 1); }
+    const lerp = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
+    const STOPS = [[0, [122, 150, 196]], [0.35, [226, 220, 222]], [0.6, [214, 140, 150]], [1, [120, 28, 44]]];
+    const grad = t => {
+      for (let i = 1; i < STOPS.length; i++) if (t <= STOPS[i][0]) {
+        const [t0, c0] = STOPS[i - 1], [t1, c1] = STOPS[i];
+        return lerp(c0, c1, (t - t0) / (t1 - t0));
+      }
+      return STOPS[STOPS.length - 1][1];
+    };
+    // Horizontal thread bands
+    for (let y = 110; y < 520; y += 2) {
+      const [r, g2, b] = grad((y - 110) / 410);
+      const j = (rnd() - 0.5) * 14;
+      x2d.fillStyle = `rgb(${r + j},${g2 + j},${b + j})`;
+      x2d.fillRect(40 + rnd() * 10, y, 920 - rnd() * 20, 1.6);
+    }
+    // Woven frames: each side filled with threads running along it, shaded across its width
+    function frame(xa, ya, xb, yb, w, light, dark) {
+      const side = (x, y, len, horiz) => {
+        for (let k = 0; k < w; k += 2) {
+          const col = lerp(light, dark, k / w);
+          x2d.fillStyle = `rgb(${col[0]},${col[1]},${col[2]})`;
+          if (horiz) x2d.fillRect(x, y + k, len, 1.6); else x2d.fillRect(x + k, y, 1.6, len);
+        }
+      };
+      side(xa, ya, xb - xa, true); side(xa, yb - w, xb - xa, true);
+      side(xa, ya, yb - ya, false); side(xb - w, ya, yb - ya, false);
+    }
+    const CREAM = [240, 214, 206], BLUSH = [214, 150, 156], WINE = [140, 30, 50], DEEP = [96, 18, 34], STEEL = [150, 165, 196];
+    frame(270, 230, 480, 440, 44, WINE, DEEP);
+    frame(470, 170, 640, 400, 34, WINE, DEEP);
+    frame(220, 80, 700, 380, 36, CREAM, BLUSH);
+    frame(520, 250, 720, 430, 28, STEEL, [96, 110, 150]);
+    frame(340, 160, 660, 470, 30, CREAM, BLUSH);
+    frame(380, 270, 560, 480, 26, BLUSH, WINE);
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
+
+    const g = new THREE.Group();
+    const wFace = 3.39, zc = 5.35, yc = 1.55, hw = 0.95, hh = 0.575;
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2, hh * 2), mat(0xffffff, { map: tex, roughness: 0.95 }));
+    art.rotation.y = Math.PI / 2;                                    // faces east, into the room
+    art.position.set(wFace + 0.035, yc, zc);
+    g.add(art);
+    const fr = mat(0x1d1b1a, { roughness: 0.5 });
+    const f = 0.025;
+    bxz(wFace, zc - hw - f, wFace + 0.04, zc - hw, yc - hh - f, yc + hh + f, fr, g);
+    bxz(wFace, zc + hw, wFace + 0.04, zc + hw + f, yc - hh - f, yc + hh + f, fr, g);
+    bxz(wFace, zc - hw, wFace + 0.04, zc + hw, yc + hh, yc + hh + f, fr, g);
+    bxz(wFace, zc - hw, wFace + 0.04, zc + hw, yc - hh - f, yc - hh, fr, g);
+    bxz(wFace, zc - hw, wFace + 0.03, zc + hw, yc - hh, yc + hh, mat(0xd9cdb7, { roughness: 1 }), g);   // stretcher backing
+    scene.add(g);
+  }
+
   // ---------- Photo corner: camera on tripod + two round LED lights between columns B3 and B2 ----------
   // Everything aims west at the brown feature wall (x = 3.33), centred on z = 5.3.
   const studio = new THREE.Group();
