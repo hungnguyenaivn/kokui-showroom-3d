@@ -1441,7 +1441,7 @@
     const x2d = c.getContext('2d');
     let seed = 31;
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
-    x2d.fillStyle = '#c2b092'; x2d.fillRect(0, 0, 1000, 600);                        // linen
+    x2d.fillStyle = '#b29d7b'; x2d.fillRect(0, 0, 1000, 600);                        // linen
     for (let i = 0; i < 9000; i++) { x2d.fillStyle = `rgba(${rnd() < 0.5 ? '120,104,80' : '220,206,182'},0.15)`; x2d.fillRect(rnd() * 1000, rnd() * 600, 2, 1); }
     const lerp = (a, b, t) => a.map((v, i) => Math.round(v + (b[i] - v) * t));
     const STOPS = [[0, [84, 108, 160]], [0.3, [176, 168, 190]], [0.55, [176, 92, 108]], [0.8, [124, 30, 48]], [1, [82, 14, 28]]];
@@ -1482,7 +1482,7 @@
 
     const g = new THREE.Group();
     const wFace = 3.39, zc = 5.35, yc = 1.55, hw = 0.95, hh = 0.575;
-    const art = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2, hh * 2), mat(0xe4e4e4, { map: tex, roughness: 0.95 }));
+    const art = new THREE.Mesh(new THREE.PlaneGeometry(hw * 2, hh * 2), mat(0xa8a8a8, { map: tex, roughness: 0.95 }));   // grey multiplier keeps the piece deep under the lights
     art.rotation.y = Math.PI / 2;                                    // faces east, into the room
     art.position.set(wFace + 0.035, yc, zc);
     g.add(art);
@@ -1492,7 +1492,7 @@
     bxz(wFace, zc + hw, wFace + 0.04, zc + hw + f, yc - hh - f, yc + hh + f, fr, g);
     bxz(wFace, zc - hw, wFace + 0.04, zc + hw, yc + hh, yc + hh + f, fr, g);
     bxz(wFace, zc - hw, wFace + 0.04, zc + hw, yc - hh - f, yc - hh, fr, g);
-    bxz(wFace, zc - hw, wFace + 0.03, zc + hw, yc - hh, yc + hh, mat(0xc2b092, { roughness: 1 }), g);   // stretcher backing
+    bxz(wFace, zc - hw, wFace + 0.03, zc + hw, yc - hh, yc + hh, mat(0x7a6b55, { roughness: 1 }), g);   // stretcher backing
     scene.add(g);
   }
 
