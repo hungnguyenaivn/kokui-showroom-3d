@@ -13,28 +13,37 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@400;500;600&family=IBM+Plex+Sans+Condensed:wght@500;600&family=IBM+Plex+Mono:wght@400;500&display=swap">
 <style>
-  /* Layout: full-bleed 3D viewport, one floating drafting-sheet panel (bottom sheet on phones) */
+  /* Layout: full-bleed 3D viewport; one frosted-glass control panel floating top-left (bottom sheet on phones).
+     Palette follows the interior: walnut-brown accent, warm stone glass, ink text. */
   :root {
     --scene: #dfe3e1;
-    --surface: rgba(250, 251, 250, 0.92);
-    --ink: #1c2629;
-    --muted: #5d6b6f;
-    --line: #c5ccca;
-    --accent: #1f6e8c;
-    --accent-ink: #ffffff;
+    --glass: rgba(250, 247, 242, 0.24);
+    --glass-line: rgba(255, 255, 255, 0.55);
+    --hair: rgba(60, 45, 38, 0.14);
+    --chip: rgba(255, 255, 255, 0.3);
+    --chip-line: rgba(60, 45, 38, 0.16);
+    --ink: #1d1715;
+    --muted: #54483f;
+    --accent: #4a2f2a;
+    --accent-ink: #f6f0e6;
+    --shadow: 0 10px 34px rgba(30, 20, 15, 0.14);
     --font-display: "IBM Plex Sans Condensed", "Arial Narrow", system-ui, sans-serif;
     --font-body: "Be Vietnam Pro", system-ui, -apple-system, "Segoe UI", sans-serif;
     --font-mono: "IBM Plex Mono", ui-monospace, Menlo, monospace;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --scene: #1a2124; --surface: rgba(30, 38, 41, 0.92); --ink: #e6ecec; --muted: #9aa9ac;
-      --line: #3a474b; --accent: #5fb3d3; --accent-ink: #0d1a1f; color-scheme: dark;
+      --scene: #1a2124; --glass: rgba(20, 17, 15, 0.32); --glass-line: rgba(255, 255, 255, 0.14);
+      --hair: rgba(255, 240, 225, 0.12); --chip: rgba(255, 255, 255, 0.07); --chip-line: rgba(255, 240, 225, 0.16);
+      --ink: #f4eee6; --muted: #c9bdb1; --accent: #eadcc6; --accent-ink: #2a1d18;
+      --shadow: 0 10px 34px rgba(0, 0, 0, 0.35); color-scheme: dark;
     }
   }
   :root[data-theme="dark"] {
-    --scene: #1a2124; --surface: rgba(30, 38, 41, 0.92); --ink: #e6ecec; --muted: #9aa9ac;
-    --line: #3a474b; --accent: #5fb3d3; --accent-ink: #0d1a1f; color-scheme: dark;
+    --scene: #1a2124; --glass: rgba(20, 17, 15, 0.32); --glass-line: rgba(255, 255, 255, 0.14);
+    --hair: rgba(255, 240, 225, 0.12); --chip: rgba(255, 255, 255, 0.07); --chip-line: rgba(255, 240, 225, 0.16);
+    --ink: #f4eee6; --muted: #c9bdb1; --accent: #eadcc6; --accent-ink: #2a1d18;
+    --shadow: 0 10px 34px rgba(0, 0, 0, 0.35); color-scheme: dark;
   }
   html, body { height: 100%; }
   body { background: var(--scene); color: var(--ink); font-family: var(--font-body); overflow: hidden; }
@@ -42,48 +51,53 @@
   #stage canvas { display: block; width: 100%; height: 100%; touch-action: none; }
 
   #panel {
-    position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 16px; width: 300px;
+    position: fixed; top: calc(16px + env(safe-area-inset-top, 0px)); left: 16px; width: 296px;
     max-height: calc(100% - 32px - env(safe-area-inset-top, 0px) - env(safe-area-inset-bottom, 0px));
-    overflow-y: auto; background: var(--surface); border: 1px solid var(--line); border-radius: 4px;
-    backdrop-filter: blur(10px); -webkit-backdrop-filter: blur(10px);
-    display: flex; flex-direction: column;
+    overflow-y: auto; overscroll-behavior: contain;
+    background: var(--glass); border: 1px solid var(--glass-line); border-radius: 18px; box-shadow: var(--shadow);
+    backdrop-filter: blur(22px) saturate(160%); -webkit-backdrop-filter: blur(22px) saturate(160%);
+    display: flex; flex-direction: column; scrollbar-width: thin;
   }
-  header.sheet { padding: 14px 16px 12px; border-bottom: 1px solid var(--line); display: flex; gap: 12px; align-items: start; }
+  #panel > * + * { border-top: 1px solid var(--hair); }
+  header.sheet { padding: 16px 16px 14px; display: flex; gap: 12px; align-items: start; }
   header.sheet > div { flex: 1; min-width: 0; }
-  .eyebrow { font: 500 10px/1 var(--font-mono); letter-spacing: 0.08em; text-transform: uppercase; color: var(--muted); }
-  h1 { margin: 6px 0 2px; font: 600 22px/1.1 var(--font-display); letter-spacing: 0.01em; text-wrap: balance; }
-  .dims { font: 400 12px/1.4 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
-  #collapse { display: none; }
-  section { padding: 12px 16px; border-bottom: 1px solid var(--line); display: flex; flex-direction: column; gap: 8px; }
-  section:last-child { border-bottom: 0; }
-  h2 { margin: 0; font: 600 11px/1 var(--font-display); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
-  .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px; }
-  .grid .wide { grid-column: span 2; }
+  .eyebrow { font: 500 10px/1 var(--font-mono); letter-spacing: 0.1em; text-transform: uppercase; color: var(--muted); }
+  h1 { margin: 7px 0 3px; font: 600 23px/1.05 var(--font-display); letter-spacing: 0.01em; text-wrap: balance; }
+  .dims { font: 400 11.5px/1.4 var(--font-mono); color: var(--muted); font-variant-numeric: tabular-nums; }
+  section, details { padding: 12px 16px 14px; display: flex; flex-direction: column; gap: 9px; }
+  h2, summary { margin: 0; font: 600 10.5px/1 var(--font-display); letter-spacing: 0.12em; text-transform: uppercase; color: var(--muted); }
+  summary { cursor: pointer; list-style: none; display: flex; justify-content: space-between; }
+  summary::-webkit-details-marker { display: none; }
+  summary::after { content: "+"; font: 500 13px/1 var(--font-mono); }
+  details[open] summary::after { content: "–"; }
+  .group { display: flex; flex-direction: column; gap: 7px; }
+  .chips { display: flex; flex-wrap: wrap; gap: 6px; }
   button {
-    font: 500 13px/1.2 var(--font-body); color: var(--ink); background: transparent;
-    border: 1px solid var(--line); border-radius: 3px; padding: 7px 9px; cursor: pointer; text-align: left;
+    font: 500 12.5px/1.2 var(--font-body); color: var(--ink); background: var(--chip);
+    border: 1px solid var(--chip-line); border-radius: 999px; padding: 6px 11px; cursor: pointer;
+    transition: background-color .15s, color .15s, border-color .15s;
   }
   button:hover { border-color: var(--accent); }
   button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
   button[aria-pressed="true"] { background: var(--accent); color: var(--accent-ink); border-color: var(--accent); }
+  #collapse { flex: none; padding: 5px 10px; font-size: 11.5px; }
   .row { display: flex; align-items: center; justify-content: space-between; gap: 10px; font-size: 13px; }
-  .seg { display: inline-flex; border: 1px solid var(--line); border-radius: 3px; overflow: hidden; }
-  .seg button { border: 0; border-radius: 0; padding: 5px 10px; font-size: 12px; }
-  .seg button + button { border-left: 1px solid var(--line); }
+  .seg { display: inline-flex; padding: 2px; gap: 2px; border-radius: 999px; background: var(--chip); border: 1px solid var(--chip-line); }
+  .seg button { border: 0; background: transparent; padding: 4px 10px; font-size: 11.5px; }
+  .seg button[aria-pressed="true"] { background: var(--accent); }
   table { width: 100%; border-collapse: collapse; font-size: 12.5px; }
-  td { padding: 4px 0; border-bottom: 1px dashed var(--line); vertical-align: baseline; }
+  td { padding: 4px 0; border-bottom: 1px dashed var(--hair); vertical-align: baseline; }
   tr:last-child td { border-bottom: 0; }
   td.n { text-align: right; font-family: var(--font-mono); font-variant-numeric: tabular-nums; color: var(--muted); white-space: nowrap; }
-  .hint { font-size: 11.5px; color: var(--muted); line-height: 1.5; }
+  .hint { font-size: 11.5px; color: var(--muted); line-height: 1.5; margin: 0; }
+  #panel.closed .more { display: none; }
 
   @media (max-width: 640px) {
     #panel {
       top: auto; left: 16px; right: 16px; width: auto;
-      bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-height: 55%;
+      bottom: calc(16px + env(safe-area-inset-bottom, 0px)); max-height: 58%;
     }
-    #collapse { display: inline-block; padding: 5px 9px; font-size: 12px; }
-    #panel.closed .more { display: none; }
-    h1 { font-size: 19px; }
+    h1 { font-size: 20px; }
   }
   @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
 </style>
@@ -91,35 +105,51 @@
 <body>
 <div id="stage"></div>
 
-<aside id="panel">
+<aside id="panel" aria-label="Điều khiển mô hình">
   <header class="sheet">
     <div>
-      <div class="eyebrow">Mặt bằng nội thất · Tầng 2</div>
+      <div class="eyebrow">Showroom &amp; văn phòng · Tầng 2</div>
       <h1>Văn phòng Tầng 2</h1>
       <div class="dims">12.000 × 10.600 mm · trần 3,2 m</div>
     </div>
     <button id="collapse" aria-expanded="true">Thu gọn</button>
   </header>
 
-  <section>
-    <h2>Góc nhìn</h2>
-    <div class="grid" id="views">
-      <button id="v-overview" data-view="overview" aria-pressed="true">Tổng quan</button>
-      <button id="v-top" data-view="top">Mặt bằng</button>
-      <button id="v-work" data-view="work">Khu làm việc</button>
-      <button id="v-director" data-view="director">P. Giám đốc</button>
-      <button id="v-pantry" data-view="pantry">Bếp khô</button>
-      <button id="v-reception" data-view="reception">Lễ tân</button>
-      <button id="v-balcony" data-view="balcony">Cửa ban công</button>
-      <button id="v-rear" data-view="rear">Cửa sổ sau</button>
-      <button id="v-shoot" data-view="shoot">Góc chụp ảnh</button>
-      <button id="v-desk" data-view="desk">Bàn làm việc</button>
-      <button id="v-clothes" data-view="clothes">Khu quần áo</button>
-      <button id="v-fitting" data-view="fitting">Lối vào</button>
-      <button id="v-stock" data-view="stock">Kho hàng</button>
-      <button id="v-lounge" data-view="lounge">Góc sofa</button>
-      <button id="v-balcony2" data-view="terrace">Ban công</button>
-      <button id="v-bar" data-view="bar">Quầy cafe</button>
+  <section id="views" aria-label="Góc nhìn">
+    <div class="group">
+      <h2>Tổng thể</h2>
+      <div class="chips">
+        <button id="v-overview" data-view="overview" aria-pressed="true">Tổng quan</button>
+        <button id="v-top" data-view="top">Mặt bằng</button>
+        <button id="v-balcony2" data-view="terrace">Ban công</button>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Trưng bày</h2>
+      <div class="chips">
+        <button id="v-fitting" data-view="fitting">Lối vào</button>
+        <button id="v-reception" data-view="reception">Bàn trưng bày</button>
+        <button id="v-clothes" data-view="clothes">Khu quần áo</button>
+        <button id="v-work" data-view="work">Kệ áo</button>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Không gian</h2>
+      <div class="chips">
+        <button id="v-lounge" data-view="lounge">Góc cafe</button>
+        <button id="v-shoot" data-view="shoot">Góc chụp ảnh</button>
+        <button id="v-balcony" data-view="balcony">Tủ ban công</button>
+        <button id="v-rear" data-view="rear">Tủ tường sau</button>
+      </div>
+    </div>
+    <div class="group">
+      <h2>Làm việc</h2>
+      <div class="chips">
+        <button id="v-desk" data-view="desk">Bàn làm việc</button>
+        <button id="v-bar" data-view="bar">Quầy cafe</button>
+        <button id="v-stock" data-view="stock">Kho hàng</button>
+        <button id="v-pantry" data-view="pantry">Bàn vải &amp; bếp</button>
+      </div>
     </div>
   </section>
 
@@ -131,31 +161,26 @@
       <span class="seg"><button id="k-on" aria-pressed="true">Bật</button><button id="k-off" aria-pressed="false">Tắt</button></span></div>
     <div class="row"><span>Đèn rọi ray</span>
       <span class="seg"><button id="t-on" aria-pressed="true">Bật</button><button id="t-off" aria-pressed="false">Tắt</button></span></div>
-  </section>
-
-  <section class="more">
-    <h2>Rèm</h2>
-    <div class="row"><span>Rèm cuốn xám than</span>
+    <div class="row"><span>Rèm cuốn</span>
       <span class="seg"><button id="b-up" aria-pressed="false">Lên</button><button id="b-half" aria-pressed="true">Nửa</button><button id="b-down" aria-pressed="false">Hạ</button></span></div>
-    <div class="row"><span>Rèm voan cửa lễ tân</span>
+    <div class="row"><span>Rèm voan</span>
       <span class="seg"><button id="s-open" aria-pressed="true">Mở</button><button id="s-closed" aria-pressed="false">Kéo kín</button></span></div>
-    <div class="hint">Vải screen độ mở 3–5%, lắp trùm ngoài lòng cửa. Cửa ban công chia 2 tấm để cuộn từng nửa.</div>
   </section>
 
-  <section class="more">
-    <h2>Diện tích ước tính</h2>
+  <details class="more">
+    <summary>Diện tích ước tính</summary>
     <table>
       <tr><td>Không gian mở</td><td class="n">≈ 108,6 m²</td></tr>
       <tr><td>Sảnh thang + thang máy</td><td class="n">≈ 11,5 m²</td></tr>
       <tr><td>WC (2 buồng)</td><td class="n">≈ 7,1 m²</td></tr>
       <tr><td><strong>Tổng sàn theo trục</strong></td><td class="n"><strong>127,2 m²</strong></td></tr>
-      <tr><td>Ban công (ngoài)</td><td class="n">≈ 9 m²</td></tr>
+      <tr><td>Ban công (ngoài)</td><td class="n">≈ 18 m²</td></tr>
     </table>
-    <div class="hint">Tính theo tim trục 12,0 × 10,6 m, chưa trừ tường và cột.</div>
-  </section>
+    <p class="hint">Tính theo tim trục 12,0 × 10,6 m, chưa trừ tường và cột.</p>
+  </details>
 
   <section class="more">
-    <div class="hint">Kéo để xoay · cuộn hoặc chụm hai ngón để phóng to · chuột phải hoặc kéo hai ngón để di chuyển.</div>
+    <p class="hint">Kéo để xoay · cuộn hoặc chụm hai ngón để phóng to · chuột phải hoặc kéo hai ngón để di chuyển.</p>
   </section>
 </aside>
 
@@ -1910,7 +1935,7 @@
     work:      { pos: [6.7, 1.65, 10.0],  target: [10.6, 0.8, 5.6] },
     director:  { pos: [6.7, 1.65, 3.4],   target: [10.6, 0.7, 1.2] },
     pantry:    { pos: [5.6, 1.65, 3.6],   target: [3.0, 0.8, 0.9] },
-    reception: { pos: [5.4, 1.65, 9.4],   target: [1.0, 0.9, 8.6] },
+    reception: { pos: [6.6, 1.8, 7.0],    target: [4.6, 0.7, 8.7] },
     balcony:   { pos: [6.0, 1.65, 5.2],   target: [5.6, 1.3, D] },
     rear:      { pos: [6.0, 1.65, 6.4],   target: [6.0, 1.5, 0] },
     shoot:     { pos: [7.4, 1.55, 5.3],   target: [3.33, 1.3, 5.3] },
