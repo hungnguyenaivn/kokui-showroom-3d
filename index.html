@@ -115,7 +115,7 @@
       <button id="v-shoot" data-view="shoot">Góc chụp ảnh</button>
       <button id="v-desk" data-view="desk">Bàn làm việc</button>
       <button id="v-clothes" data-view="clothes">Khu quần áo</button>
-      <button id="v-fitting" data-view="fitting">Gương soi</button>
+      <button id="v-fitting" data-view="fitting">Lối vào</button>
       <button id="v-stock" data-view="stock">Kho hàng</button>
       <button id="v-lounge" data-view="lounge">Góc sofa</button>
       <button id="v-balcony2" data-view="terrace">Ban công</button>
@@ -741,40 +741,39 @@
     scene.add(g);
   }
 
-  // ---------- Clothing display: oak garment racks, display tables, oak mirror ----------
+  // ---------- Clothing display: oak garment racks, tee shelves, display table, entrance rack + mannequin ----------
   {
     const g = new THREE.Group();
     const oak = mat(0xffffff, { map: oakTexture(), roughness: 0.55 });
     const steel = mat(0x1a1b1d, { roughness: 0.45, metalness: 0.5 });
-    const mirrorMat = mat(0xdfe6ea, { metalness: 1, roughness: 0.03, envMap: M.floor.envMap || null });
     const cache = {};
     const cm = c => cache[c] || (cache[c] = mat(c, { roughness: 0.95 }));
     const PALETTE = [0xe9e4da, 0x1d1d1f, 0xc9b08a, 0x5e6b4e, 0xf4f2ee, 0x3b4a63, 0x8a5a34, 0xb8b2a7, 0x6f2f2a];
 
     // Freestanding oak rack along x: two uprights on sled feet, round top rail, low shelf.
-    function rack(xa, xb, zc, seed) {
+    function rack(xa, xb, zc, seed, grp = g) {
       [xa, xb - 0.045].forEach(x => {
-        bxz(x, zc - 0.022, x + 0.045, zc + 0.022, 0.04, 1.62, oak, g);
-        bxz(x - 0.01, zc - 0.26, x + 0.055, zc + 0.26, 0, 0.04, oak, g);
+        bxz(x, zc - 0.022, x + 0.045, zc + 0.022, 0.04, 1.62, oak, grp);
+        bxz(x - 0.01, zc - 0.26, x + 0.055, zc + 0.26, 0, 0.04, oak, grp);
       });
       const rail = new THREE.Mesh(new THREE.CylinderGeometry(0.016, 0.016, xb - xa, 16), oak);
-      rail.rotation.z = Math.PI / 2; rail.position.set((xa + xb) / 2, 1.58, zc); g.add(rail);
-      bxz(xa + 0.045, zc - 0.2, xb - 0.045, zc + 0.2, 0.13, 0.16, oak, g);
+      rail.rotation.z = Math.PI / 2; rail.position.set((xa + xb) / 2, 1.58, zc); grp.add(rail);
+      bxz(xa + 0.045, zc - 0.2, xb - 0.045, zc + 0.2, 0.13, 0.16, oak, grp);
       // Garments: shirts, knits and a few long coats, spaced like a curated rail
       let x = xa + 0.14, i = seed;
       while (x < xb - 0.12) {
         const c = PALETTE[(i * 5) % PALETTE.length], long = i % 4 === 1, wd = long ? 0.46 : 0.42;
         const len = long ? 1.05 : 0.68 + (i % 3) * 0.04;
-        bxz(x - 0.003, zc - 0.2, x + 0.003, zc + 0.2, 1.5, 1.515, steel, g);                 // hanger
-        bxz(x - 0.012, zc - wd / 2, x + 0.012, zc + wd / 2, 1.5 - len, 1.5, cm(c), g);      // body
-        bxz(x - 0.01, zc - wd / 2 - 0.04, x + 0.01, zc - wd / 2, 1.5 - len * 0.75, 1.47, cm(c), g); // sleeves
-        bxz(x - 0.01, zc + wd / 2, x + 0.01, zc + wd / 2 + 0.04, 1.5 - len * 0.75, 1.47, cm(c), g);
+        bxz(x - 0.003, zc - 0.2, x + 0.003, zc + 0.2, 1.5, 1.515, steel, grp);                 // hanger
+        bxz(x - 0.012, zc - wd / 2, x + 0.012, zc + wd / 2, 1.5 - len, 1.5, cm(c), grp);      // body
+        bxz(x - 0.01, zc - wd / 2 - 0.04, x + 0.01, zc - wd / 2, 1.5 - len * 0.75, 1.47, cm(c), grp); // sleeves
+        bxz(x - 0.01, zc + wd / 2, x + 0.01, zc + wd / 2 + 0.04, 1.5 - len * 0.75, 1.47, cm(c), grp);
         x += 0.07 + (i % 3) * 0.02; i++;
       }
       // Folded pieces and a pair of shoes on the low shelf
-      bxz(xa + 0.15, zc - 0.13, xa + 0.45, zc + 0.12, 0.16, 0.25, cm(PALETTE[(seed + 2) % 9]), g);
-      bxz(xb - 0.38, zc - 0.12, xb - 0.28, zc + 0.12, 0.16, 0.24, cm(0x1d1d1f), g);
-      bxz(xb - 0.26, zc - 0.12, xb - 0.16, zc + 0.12, 0.16, 0.24, cm(0x1d1d1f), g);
+      bxz(xa + 0.15, zc - 0.13, xa + 0.45, zc + 0.12, 0.16, 0.25, cm(PALETTE[(seed + 2) % 9]), grp);
+      bxz(xb - 0.38, zc - 0.12, xb - 0.28, zc + 0.12, 0.16, 0.24, cm(0x1d1d1f), grp);
+      bxz(xb - 0.26, zc - 0.12, xb - 0.16, zc + 0.12, 0.16, 0.24, cm(0x1d1d1f), grp);
     }
     // Tiered oak display shelves for folded tees (per reference photo), shelves tilted towards the balcony (+z)
     function teeShelf(xa, xb, zc, seed) {
@@ -806,7 +805,7 @@
     }
     teeShelf(6.9, 8.7, 6.9, 0);     // 180 × 50 × 200 cm each, five tilted shelves
     teeShelf(9.2, 11.0, 6.9, 7);
-    rack(1.55, 2.85, D - 0.46, 6);   // against the south wall between window and balcony door, near the mirror
+    rack(1.55, 2.85, D - 0.46, 6);   // against the south wall between window and balcony door
 
     // Birch-plywood box table on splayed chrome legs (per reference photo), in the line of sight
     // from the lobby door. 180 × 90 cm, top at 80 cm; open box underneath split into two bays.
@@ -884,15 +883,47 @@
       folded(4.95, 8.7, yb + t, 3, 0x8a5a34, 0.34, 0.3);
     }
 
-    // Large oak-framed mirror standing against the west wall of the reception, 1.1 × 2.0 m
+    // Entrance: oak rack along the west wall (rail runs north–south) and a dressed mannequin facing the door
     {
-      const xw = 0.11, zc = 8.75, hw = 0.55, f = 0.08;
-      bxz(xw, zc - hw, xw + 0.05, zc + hw, 0.02, 2.02, oak, g);                               // frame back
-      bxz(xw + 0.05, zc - hw, xw + 0.07, zc - hw + f, 0.02, 2.02, oak, g);                     // frame front rails
-      bxz(xw + 0.05, zc + hw - f, xw + 0.07, zc + hw, 0.02, 2.02, oak, g);
-      bxz(xw + 0.05, zc - hw + f, xw + 0.07, zc + hw - f, 0.02, 0.02 + f, oak, g);
-      bxz(xw + 0.05, zc - hw + f, xw + 0.07, zc + hw - f, 2.02 - f, 2.02, oak, g);
-      bxz(xw + 0.05, zc - hw + f, xw + 0.055, zc + hw - f, 0.02 + f, 2.02 - f, mirrorMat, g);
+      const sub = new THREE.Group();
+      rack(-0.7, 0.7, 0, 9, sub);
+      sub.rotation.y = Math.PI / 2;
+      sub.position.set(0.45, 0, 8.85);
+      g.add(sub);
+    }
+    {
+      const mq = new THREE.Group();
+      const form = mat(0xe8e3da, { roughness: 0.6 });
+      const jacket = cm(0x5e6b4e), trousers = cm(0xc9b08a), tee = cm(0xf4f2ee);
+      const base = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.22, 0.03, 32), steel);
+      base.position.y = 0.015; mq.add(base);
+      const rod = new THREE.Mesh(new THREE.CylinderGeometry(0.012, 0.012, 0.25, 10), steel);
+      rod.position.set(0, 0.15, 0.06); mq.add(rod);
+      [-0.09, 0.09].forEach(x => {                                        // legs in trousers
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.075, 0.06, 0.86, 16), trousers);
+        leg.position.set(x, 0.5, 0); mq.add(leg);
+        const shoe = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.07, 0.26), cm(0x1d1d1f));
+        shoe.position.set(x, 0.07, -0.04); mq.add(shoe);
+      });
+      const torsoPts = [[0.17, 0], [0.16, 0.12], [0.15, 0.3], [0.19, 0.48], [0.2, 0.56], [0.08, 0.62], [0.05, 0.64]]
+        .map(([r, y]) => new THREE.Vector2(r, y));
+      const torso = new THREE.Mesh(new THREE.LatheGeometry(torsoPts, 28), jacket);
+      torso.position.y = 0.92; torso.scale.z = 0.62; mq.add(torso);
+      const shirt = new THREE.Mesh(new THREE.BoxGeometry(0.1, 0.4, 0.01), tee);       // shirt showing at the open front
+      shirt.position.set(0, 1.25, -0.125); mq.add(shirt);
+      [-1, 1].forEach(sd => {                                              // sleeves + hands
+        const arm = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.045, 0.6, 14), jacket);
+        arm.position.set(sd * 0.24, 1.17, 0); arm.rotation.z = sd * 0.12; mq.add(arm);
+        const hand = new THREE.Mesh(new THREE.SphereGeometry(0.04, 12, 8), form);
+        hand.position.set(sd * 0.275, 0.84, 0); mq.add(hand);
+      });
+      const neck = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.05, 0.1, 14), form);
+      neck.position.y = 1.6; mq.add(neck);
+      const head = new THREE.Mesh(new THREE.SphereGeometry(0.1, 24, 16), form);
+      head.position.y = 1.75; head.scale.set(0.85, 1.15, 0.95); mq.add(head);
+      mq.position.set(1.0, 0, 9.95);
+      mq.rotation.y = -Math.PI / 4;                                        // facing the lobby door
+      g.add(mq);
     }
 
     g.traverse(o => { if (o.isMesh) { o.castShadow = true; o.receiveShadow = true; } });
@@ -1186,7 +1217,7 @@
   }
 
   // ---------- Track spotlights (black, ceiling-mounted at 3.15 m) ----------
-  // Warm 3000 K-ish beams on the tee shelves, bookshelf, display table, wall rack, mirror and pine table.
+  // Warm 3000 K-ish beams on the tee shelves, bookshelf, display table, wall racks, mannequin and pine table.
   const trackFix = new THREE.Group();
   const trackLightGroup = new THREE.Group();
   scene.add(trackFix, trackLightGroup);
@@ -1216,7 +1247,7 @@
     }
     track(6.9, 11.0, 'x', 8.2, [[7.4, 7.5, 1.1, 7.15], [8.3, 8.2, 1.1, 7.15], [9.7, 9.7, 1.1, 7.15], [10.6, 10.5, 1.1, 7.15]]);
     track(8.6, 10.2, 'z', 10.9, [[8.7, 11.6, 1.2, 8.6], [9.45, 11.6, 1.2, 9.4], [10.15, 11.6, 1.2, 10.1]]);
-    track(0.8, 5.4, 'x', 9.4, [[1.2, 0.2, 1.2, 8.75], [2.2, 2.2, 1.1, 10.03], [4.2, 4.3, 0.8, 8.7], [5.1, 5.0, 0.8, 8.7]]);
+    track(0.8, 5.4, 'x', 9.4, [[1.0, 0.45, 1.1, 8.85], [1.6, 1.0, 1.2, 9.95], [2.2, 2.2, 1.1, 10.03], [4.2, 4.3, 0.8, 8.7], [5.1, 5.0, 0.8, 8.7]]);
     track(1.0, 3.4, 'z', 4.5, [[1.1, 5.69, 0.9, 0.4], [1.9, 4.55, 0.8, 2.0], [2.9, 4.55, 0.8, 2.9]]);
   }
   function setTrackLights(on) {
@@ -1259,7 +1290,6 @@
     plant(11.5, 7.45, 1.5, 0xe9e4da, 'olive');     // between the tee shelf and the bookshelf
     plant(11.55, 5.4, 1.3, 0x2a2c2e, 'leafy');     // by the TV
     plant(6.65, 0.7, 1.4, 0xc9b08a, 'leafy');      // beside the walnut sideboard
-    plant(0.4, 9.9, 1.2, 0xe9e4da, 'olive');       // reception corner, past the mirror
     // Small pots on the two cabinets
     [[5.4, 1.1, 0.35], [5.95, 1.235, 10.2]].forEach(([x, y, z]) => {
       const pot = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.06, 0.12, 20), mat(0x2a2c2e, { roughness: 0.5 }));
