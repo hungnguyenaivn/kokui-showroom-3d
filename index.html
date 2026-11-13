@@ -1163,14 +1163,13 @@
     scene.add(g);
   }
 
-  // ---------- Stock room beside the work desk: steel shelving on the east wall behind fabric screens ----------
+  // ---------- Stock room beside the work desk: steel shelving on the east wall ----------
   {
     const g = new THREE.Group();
     const steel = mat(0x151617, { roughness: 0.5, metalness: 0.4 });
     const ply = mat(0xffffff, { map: oakTexture('#e2c9a0'), roughness: 0.6 });
     const kraft = mat(0xc29a6b, { roughness: 0.9 });
     const label = mat(0xf4f2ee, { roughness: 0.9 });
-    const fabric = mat(0xd8cfbf, { roughness: 1 });
     const cache = {};
     const cm = c => cache[c] || (cache[c] = mat(c, { roughness: 0.95 }));
     const TONES = [0xe9e4da, 0x1d1d1f, 0xc9b08a, 0x5e6b4e, 0x3b4a63, 0xf4f2ee, 0x8a5a34];
@@ -1201,16 +1200,6 @@
       if (lv && x > 10.8) return;
       bxz(x, z, x + 0.46, z + 0.38, lv * 0.32, lv * 0.32 + 0.31, kraft, g);
       bxz(x + 0.15, z - 0.005, x + 0.31, z, lv * 0.32 + 0.18, lv * 0.32 + 0.25, label, g);
-    });
-    // Two fabric screens close the stock area off from the desk; way in at the south end by the TV
-    const xs = 10.3;
-    [[0.7, 1.7], [1.72, 2.72]].forEach(([za, zb]) => {
-      [za, zb - 0.03].forEach(z => {
-        bxz(xs - 0.015, z, xs + 0.015, z + 0.03, 0, 2.0, steel, g);
-        bxz(xs - 0.2, z, xs + 0.2, z + 0.03, 0, 0.03, steel, g);
-      });
-      bxz(xs - 0.012, za + 0.03, xs + 0.012, zb - 0.03, 1.93, 1.96, steel, g);
-      bxz(xs - 0.005, za + 0.035, xs + 0.005, zb - 0.035, 0.1, 1.94, fabric, g);
     });
     g.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
     scene.add(g);
@@ -1568,8 +1557,9 @@
   // 90 × 120 cm portrait in a dark wood frame (after the reference photo): misty olive and moss greens
   // around a deep, almost black cloud through the middle, lighter sage haze lower right. Drawn procedurally.
   {
-    const c = document.createElement('canvas'); c.width = 600; c.height = 800;
+    const c = document.createElement('canvas'); c.width = 1200; c.height = 1600;
     const x2d = c.getContext('2d');
+    x2d.scale(2, 2);                                                  // draw in 600 × 800 units at double resolution
     let seed = 53;
     const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
     const bg = x2d.createLinearGradient(0, 0, 0, 800);
@@ -1577,16 +1567,25 @@
     x2d.fillStyle = bg; x2d.fillRect(0, 0, 600, 800);
     const puff = (x, y, r, col, a) => {
       const gr = x2d.createRadialGradient(x, y, 0, x, y, r);
-      gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(1, `rgba(${col},0)`);
+      gr.addColorStop(0, `rgba(${col},${a})`); gr.addColorStop(0.55, `rgba(${col},${a * 0.75})`); gr.addColorStop(1, `rgba(${col},0)`);
       x2d.fillStyle = gr; x2d.fillRect(x - r, y - r, r * 2, r * 2);
     };
-    for (let i = 0; i < 70; i++) puff(rnd() * 600, rnd() * 260, 60 + rnd() * 90, '128,124,92', 0.18);       // upper haze
-    for (let i = 0; i < 90; i++) puff(60 + rnd() * 480, 300 + rnd() * 220, 50 + rnd() * 90, '22,26,10', 0.28); // dark cloud
-    for (let i = 0; i < 60; i++) puff(300 + rnd() * 300, 470 + rnd() * 250, 40 + rnd() * 90, '178,172,118', 0.2); // sage mist
-    for (let i = 0; i < 40; i++) puff(rnd() * 240, 520 + rnd() * 260, 50 + rnd() * 70, '70,80,34', 0.22);
-    for (let i = 0; i < 30; i++) puff(480 + rnd() * 120, 640 + rnd() * 160, 40 + rnd() * 60, '52,64,22', 0.3);
-    for (let i = 0; i < 6000; i++) { x2d.fillStyle = `rgba(${rnd() < 0.5 ? '20,22,10' : '210,205,160'},0.06)`; x2d.fillRect(rnd() * 600, rnd() * 800, 2, 2); }
-    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = 8;
+    for (let i = 0; i < 110; i++) puff(rnd() * 600, rnd() * 260, 25 + rnd() * 55, '138,134,98', 0.22);       // upper haze
+    for (let i = 0; i < 160; i++) puff(60 + rnd() * 480, 300 + rnd() * 220, 20 + rnd() * 55, '14,17,6', 0.38); // dark cloud
+    for (let i = 0; i < 110; i++) puff(300 + rnd() * 300, 470 + rnd() * 250, 18 + rnd() * 55, '196,190,132', 0.28); // sage mist
+    for (let i = 0; i < 70; i++) puff(rnd() * 240, 520 + rnd() * 260, 22 + rnd() * 45, '72,84,32', 0.3);
+    for (let i = 0; i < 50; i++) puff(480 + rnd() * 120, 640 + rnd() * 160, 20 + rnd() * 40, '44,56,16', 0.4);
+    // Dry-brush detail: short curved strokes, light over the mist, dark through the cloud
+    for (let i = 0; i < 900; i++) {
+      const x = rnd() * 600, y = rnd() * 800, inCloud = y > 290 && y < 530 && x > 50 && x < 560;
+      x2d.strokeStyle = inCloud ? `rgba(8,10,4,${0.1 + rnd() * 0.15})` : `rgba(${rnd() < 0.6 ? '205,198,145' : '40,46,18'},${0.08 + rnd() * 0.12})`;
+      x2d.lineWidth = 0.4 + rnd() * 1.4;
+      x2d.beginPath(); x2d.moveTo(x, y);
+      x2d.quadraticCurveTo(x + (rnd() - 0.5) * 30, y + (rnd() - 0.5) * 20, x + (rnd() - 0.5) * 50, y + (rnd() - 0.5) * 24);
+      x2d.stroke();
+    }
+    for (let i = 0; i < 9000; i++) { x2d.fillStyle = `rgba(${rnd() < 0.5 ? '20,22,10' : '210,205,160'},0.07)`; x2d.fillRect(rnd() * 600, rnd() * 800, 1, 1); }
+    const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding; tex.anisotropy = renderer.capabilities.getMaxAnisotropy();
 
     const g = new THREE.Group();
     const zf = 0.18, xc = 5.69, yc = 1.93, hw = 0.45, hh = 0.6, f = 0.022;   // on the north facade column face
