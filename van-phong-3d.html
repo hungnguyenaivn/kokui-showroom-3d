@@ -1002,13 +1002,10 @@
     scene.add(g);
   }
 
-  // ---------- Lounge in front of the bookshelf: bouclé 3-seat sofa + armchair, round oak table, jute rug ----------
-  // Sofa faces the balcony (back to the room); armchair faces the bookshelf across the table.
+  // ---------- Café lounge in front of the bookshelf: Togo-style seats, cloud table, aluminium side table, jute rug ----------
+  // Leather loveseat faces the balcony (back to the room); cream fireside chair faces the bookshelf.
   {
     const g = new THREE.Group();
-    const boucle = mat(0xefe9df, { roughness: 1 });
-    const oak = mat(0xffffff, { map: oakTexture(), roughness: 0.55 });
-    const plinth = mat(0x2a2522, { roughness: 0.7 });
     // Jute rug with a tight basket weave, 2.0 × 2.6 m
     {
       const c = document.createElement('canvas'); c.width = c.height = 256;
@@ -1023,35 +1020,76 @@
       tex.wrapS = tex.wrapT = THREE.RepeatWrapping; tex.repeat.set(6.5, 5); tex.encoding = THREE.sRGBEncoding;
       bxz(8.8, 8.4, 11.4, 10.4, 0.002, 0.014, mat(0xffffff, { map: tex, roughness: 1 }), g);
     }
-    // Upholstered seat built facing local -z: plinth, seat, back, arms, seat cushions
-    function seat(len, x, z, rotY, cushions) {
-      const s = new THREE.Group(), d = 0.9, hl = len / 2;
-      bxz(-hl + 0.04, -d / 2 + 0.04, hl - 0.04, d / 2 - 0.04, 0, 0.08, plinth, s);
-      bxz(-hl, -d / 2, hl, d / 2, 0.08, 0.36, boucle, s);
-      bxz(-hl, d / 2 - 0.2, hl, d / 2, 0.36, 0.76, boucle, s);
-      bxz(-hl, -d / 2, -hl + 0.18, d / 2, 0.36, 0.6, boucle, s);
-      bxz(hl - 0.18, -d / 2, hl, d / 2, 0.36, 0.6, boucle, s);
-      const inner = len - 0.36, cw = inner / cushions;
-      for (let k = 0; k < cushions; k++) {
-        const x0 = -hl + 0.18 + k * cw;
-        bxz(x0 + 0.005, -d / 2 + 0.02, x0 + cw - 0.005, d / 2 - 0.2, 0.36, 0.46, boucle, s);
-        bxz(x0 + 0.02, d / 2 - 0.34, x0 + cw - 0.02, d / 2 - 0.2, 0.46, 0.72, boucle, s);
-      }
-      s.position.set(x, 0, z); s.rotation.y = rotY;
-      g.add(s);
+    // Togo-style low lounge seat (per reference photo), built facing local -z: puffy quilted rolls
+    // stepping up from a low front roll to the reclined back, split along the width like the stitching.
+    function togo(w, x, z, rotY, m) {
+      const t = new THREE.Group();
+      const ROLLS = [[-0.3, 0.16, 0.16], [-0.08, 0.22, 0.2], [0.16, 0.34, 0.22], [0.32, 0.56, 0.19], [0.38, 0.74, 0.14]];
+      const segs = Math.max(2, Math.round(w / 0.45)), sw = (w - 0.2) / segs;
+      ROLLS.forEach(([rz, ry, r]) => {
+        for (let k = 0; k < segs; k++) {
+          const len = Math.max(0.01, sw - 2 * r * 0.55);
+          const c = new THREE.Mesh(new THREE.CapsuleGeometry(r, len, 6, 16), m);
+          c.rotation.z = Math.PI / 2;
+          c.position.set(-w / 2 + 0.1 + sw * (k + 0.5), ry, rz);
+          c.scale.set(1, 1, 0.85);
+          t.add(c);
+        }
+      });
+      [-1, 1].forEach(sd => {                                    // soft side arms
+        const arm = new THREE.Mesh(new THREE.CapsuleGeometry(0.15, 0.45, 6, 16), m);
+        arm.rotation.x = Math.PI / 2 - 0.35;
+        arm.position.set(sd * (w / 2 - 0.08), 0.3, 0.05);
+        t.add(arm);
+      });
+      t.position.set(x, 0, z); t.rotation.y = rotY;
+      g.add(t);
     }
-    seat(2.1, 10.1, 8.35, Math.PI, 3);        // sofa, back to the room, facing south to the balcony
-    seat(0.85, 8.9, 9.5, -Math.PI / 2, 1);     // armchair, facing east to the bookshelf
-    // Round solid-oak coffee table, Ø 80 cm, thick pedestal
+    togo(1.5, 10.1, 8.4, Math.PI, mat(0x3a2820, { roughness: 0.45 }));          // dark brown leather loveseat → balcony
+    togo(0.9, 8.95, 9.55, -Math.PI / 2, mat(0xe9e3d8, { roughness: 0.95 }));    // cream fireside chair → bookshelf
+
+    // Cloud coffee table: outline of four overlapping discs, cream lacquer, chunky round legs, top at 38 cm
     {
-      const top = new THREE.Mesh(new THREE.CylinderGeometry(0.4, 0.4, 0.05, 48), oak);
-      top.position.set(10.1, 0.405, 9.5); g.add(top);
-      const ped = new THREE.Mesh(new THREE.CylinderGeometry(0.16, 0.2, 0.38, 32), oak);
-      ped.position.set(10.1, 0.19, 9.5); g.add(ped);
-      bxz(9.95, 9.37, 10.23, 9.59, 0.43, 0.46, mat(0x2a4a8a, { roughness: 0.7 }), g);      // book
-      bxz(9.97, 9.39, 10.21, 9.57, 0.46, 0.48, mat(0xf1eee8, { roughness: 0.7 }), g);
-      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.035, 0.09, 20), mat(0xc9b08a, { roughness: 0.4 }));
-      cup.position.set(10.25, 0.475, 9.69); g.add(cup);
+      const cream = mat(0xece5d8, { roughness: 0.5 });
+      const PETALS = [[0.2, 0], [-0.2, 0], [0, 0.2], [0, -0.2]], R = 0.29;
+      const sh = new THREE.Shape();
+      for (let i = 0; i <= 128; i++) {
+        const tt = i / 128 * Math.PI * 2, ux = Math.cos(tt), uy = Math.sin(tt);
+        let r = 0;
+        PETALS.forEach(([cx0, cy0]) => {
+          const b = ux * cx0 + uy * cy0, disc = R * R - (cx0 * cx0 + cy0 * cy0 - b * b);
+          if (disc >= 0) r = Math.max(r, b + Math.sqrt(disc));
+        });
+        i ? sh.lineTo(ux * r, uy * r) : sh.moveTo(ux * r, uy * r);
+      }
+      const geo = new THREE.ExtrudeGeometry(sh, { depth: 0.05, bevelEnabled: true, bevelThickness: 0.012, bevelSize: 0.012, bevelSegments: 3 });
+      geo.rotateX(-Math.PI / 2);
+      const top = new THREE.Mesh(geo, cream);
+      const tx = 10.1, tz = 9.55;
+      top.position.set(tx, 0.33, tz); g.add(top);
+      PETALS.forEach(([dx, dz]) => {
+        const leg = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.33, 20), cream);
+        leg.position.set(tx + dx * 1.15, 0.165, tz + dz * 1.15); g.add(leg);
+      });
+      // Coffee for two, a magazine, a small vase
+      const ceramic = mat(0xf4f2ee, { roughness: 0.35 });
+      [[tx - 0.2, tz + 0.05], [tx + 0.18, tz - 0.12]].forEach(([x, z]) => {
+        const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.032, 0.07, 20), ceramic);
+        cup.position.set(x, 0.43, z); g.add(cup);
+        const saucer = new THREE.Mesh(new THREE.CylinderGeometry(0.07, 0.07, 0.008, 24), ceramic);
+        saucer.position.set(x, 0.398, z); g.add(saucer);
+      });
+      bxz(tx - 0.05, tz + 0.12, tx + 0.21, tz + 0.32, 0.394, 0.4, mat(0x2f4858, { roughness: 0.7 }), g);
+      const vase = new THREE.Mesh(new THREE.SphereGeometry(0.06, 20, 14), mat(0x2a2522, { roughness: 0.4 }));
+      vase.position.set(tx + 0.05, 0.45, tz - 0.25); g.add(vase);
+    }
+    // Brushed-aluminium side table: two offset half-cylinders, 45 cm high
+    {
+      const alu = mat(0xc4c8ca, { metalness: 0.85, roughness: 0.35 });
+      [[0, 0], [Math.PI, 0.06]].forEach(([rot, off]) => {
+        const half = new THREE.Mesh(new THREE.CylinderGeometry(0.22, 0.22, 0.45, 32, 1, false, rot, Math.PI), alu);
+        half.position.set(8.8 + off, 0.225, 8.45); g.add(half);
+      });
     }
     g.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
     scene.add(g);
