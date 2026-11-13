@@ -118,7 +118,8 @@
       <button id="v-fitting" data-view="fitting">Gương soi</button>
       <button id="v-stock" data-view="stock">Kho hàng</button>
       <button id="v-lounge" data-view="lounge">Góc sofa</button>
-      <button id="v-balcony2" data-view="terrace" class="wide">Ban công</button>
+      <button id="v-balcony2" data-view="terrace">Ban công</button>
+      <button id="v-bar" data-view="bar">Quầy cafe</button>
     </div>
   </section>
 
@@ -1320,6 +1321,88 @@
     scene.add(g);
   }
 
+  // ---------- Coffee & matcha bar on the north wall, between the stock room and the work desk ----------
+  // 135 × 60 × 90 cm counter on the solid wall stretch x 8.9–10.25 (between the window and the stock screens),
+  // green glazed-tile splashback, open oak shelf above. Espresso + grinder on the left, matcha set on the right.
+  {
+    const g = new THREE.Group();
+    const oak = mat(0xffffff, { map: oakTexture(), roughness: 0.55 });
+    const stone = mat(0xe2e0db, { roughness: 0.35 });
+    const black = mat(0x151617, { roughness: 0.4, metalness: 0.2 });
+    const steel = mat(0xc4c9cc, { metalness: 0.85, roughness: 0.25 });
+    const ceramic = mat(0xf4f2ee, { roughness: 0.3 });
+    const x1 = 8.9, x2 = 10.25, zb = 0.11, zf = 0.71;
+    bxz(x1, zb, x2, zf - 0.06, 0, 0.1, black, g);
+    bxz(x1, zb, x2, zf - 0.02, 0.1, 0.87, oak, g);
+    bxz((x1 + x2) / 2 - 0.002, zf - 0.022, (x1 + x2) / 2 + 0.002, zf - 0.018, 0.1, 0.87, black, g);
+    bxz(x1 - 0.01, zb, x2 + 0.01, zf + 0.01, 0.87, 0.9, stone, g);
+    // Glazed green tile splashback (vertical stack bond)
+    {
+      const c = document.createElement('canvas'); c.width = 270; c.height = 120;
+      const cx = c.getContext('2d');
+      let seed = 21;
+      const rnd = () => (seed = (seed * 16807) % 2147483647) / 2147483647;
+      for (let y = 0; y < 120; y += 20) for (let x = 0; x < 270; x += 10) {
+        cx.fillStyle = `hsl(${100 + rnd() * 12}, ${22 + rnd() * 10}%, ${40 + rnd() * 9}%)`;
+        cx.fillRect(x, y, 10, 20);
+      }
+      cx.fillStyle = 'rgba(235,232,224,0.9)';
+      for (let x = 0; x <= 270; x += 10) cx.fillRect(x - 0.5, 0, 1, 120);
+      for (let y = 0; y <= 120; y += 20) cx.fillRect(0, y - 0.5, 270, 1);
+      const tex = new THREE.CanvasTexture(c); tex.encoding = THREE.sRGBEncoding;
+      bxz(x1, zb, x2, zb + 0.012, 0.9, 1.5, mat(0xffffff, { map: tex, roughness: 0.2, metalness: 0.05 }), g);
+    }
+    // Open oak shelf with cups, glasses and bean jars
+    bxz(x1 + 0.05, zb, x2 - 0.05, zb + 0.24, 1.58, 1.61, oak, g);
+    for (let k = 0; k < 6; k++) {
+      const cup = new THREE.Mesh(new THREE.CylinderGeometry(0.04, 0.033, 0.08, 18), k < 3 ? ceramic : mat(0x2a2c2e, { roughness: 0.4 }));
+      cup.position.set(x1 + 0.12 + k * 0.1, 1.65, zb + 0.12); g.add(cup);
+    }
+    [0, 1, 2].forEach(k => {
+      const jar = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 0.16, 18),
+        new THREE.MeshStandardMaterial({ color: 0xe8f0f2, transparent: true, opacity: 0.4, roughness: 0.05 }));
+      jar.position.set(x2 - 0.38 + k * 0.12, 1.69, zb + 0.12); g.add(jar);
+      const beans = new THREE.Mesh(new THREE.CylinderGeometry(0.045, 0.045, 0.1, 18), mat(k === 2 ? 0x6d8f3a : 0x4a2e1b, { roughness: 0.9 }));
+      beans.position.set(x2 - 0.38 + k * 0.12, 1.66, zb + 0.12); g.add(beans);
+    });
+    const top = 0.9;
+    // Espresso machine: steel body, group head, portafilter, drip tray, two cups
+    bxz(x1 + 0.06, zb + 0.08, x1 + 0.44, zb + 0.5, top, top + 0.38, steel, g);
+    bxz(x1 + 0.06, zb + 0.08, x1 + 0.44, zb + 0.5, top + 0.38, top + 0.4, black, g);
+    const gh = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.05, 18), steel);
+    gh.position.set(x1 + 0.25, top + 0.22, zb + 0.54); g.add(gh);
+    bxz(x1 + 0.24, zb + 0.53, x1 + 0.26, zb + 0.66, top + 0.2, top + 0.215, black, g);
+    bxz(x1 + 0.1, zb + 0.5, x1 + 0.4, zb + 0.6, top, top + 0.02, black, g);
+    [x1 + 0.2, x1 + 0.3].forEach(x => {
+      const c2 = new THREE.Mesh(new THREE.CylinderGeometry(0.03, 0.025, 0.06, 16), ceramic);
+      c2.position.set(x, top + 0.05, zb + 0.55); g.add(c2);
+    });
+    // Grinder: black body with a conical bean hopper
+    bxz(x1 + 0.5, zb + 0.15, x1 + 0.64, zb + 0.35, top, top + 0.28, black, g);
+    const hop = new THREE.Mesh(new THREE.CylinderGeometry(0.08, 0.035, 0.14, 20),
+      new THREE.MeshStandardMaterial({ color: 0x9a7d62, transparent: true, opacity: 0.55, roughness: 0.1 }));
+    hop.position.set(x1 + 0.57, top + 0.35, zb + 0.25); g.add(hop);
+    // Matcha set on a wooden tray: bowl, bamboo whisk on its stand, scoop, tin; gooseneck kettle behind
+    bxz(x2 - 0.5, zb + 0.32, x2 - 0.08, zf - 0.04, top, top + 0.015, mat(0x8a5a34, { roughness: 0.6 }), g);
+    const bowl = new THREE.Mesh(new THREE.SphereGeometry(0.065, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), mat(0xd9dccf, { roughness: 0.6, side: THREE.DoubleSide }));
+    bowl.position.set(x2 - 0.38, top + 0.08, zb + 0.46); g.add(bowl);
+    const tea = new THREE.Mesh(new THREE.CircleGeometry(0.058, 24), mat(0x7fa64a, { roughness: 0.7 }));
+    tea.rotation.x = -Math.PI / 2; tea.position.set(x2 - 0.38, top + 0.05, zb + 0.46); g.add(tea);
+    const whisk = new THREE.Mesh(new THREE.ConeGeometry(0.03, 0.09, 16), mat(0xe2cfa1, { roughness: 0.9 }));
+    whisk.position.set(x2 - 0.24, top + 0.08, zb + 0.45); g.add(whisk);
+    const stand = new THREE.Mesh(new THREE.CylinderGeometry(0.025, 0.03, 0.05, 16), ceramic);
+    stand.position.set(x2 - 0.24, top + 0.04, zb + 0.45); g.add(stand);
+    bxz(x2 - 0.2, zb + 0.56, x2 - 0.1, zb + 0.57, top + 0.015, top + 0.02, mat(0xc9b08a, { roughness: 0.7 }), g);
+    const tin = new THREE.Mesh(new THREE.CylinderGeometry(0.035, 0.035, 0.09, 20), mat(0x4f7d3a, { roughness: 0.4, metalness: 0.3 }));
+    tin.position.set(x2 - 0.14, top + 0.06, zb + 0.4); g.add(tin);
+    const kettle = new THREE.Mesh(new THREE.CylinderGeometry(0.06, 0.07, 0.14, 20), black);
+    kettle.position.set(x2 - 0.3, top + 0.07, zb + 0.18); g.add(kettle);
+    const spout = new THREE.Mesh(new THREE.CylinderGeometry(0.006, 0.008, 0.16, 8), black);
+    spout.position.set(x2 - 0.37, top + 0.13, zb + 0.24); spout.rotation.set(0.5, 0, 0.9); g.add(spout);
+    g.traverse(o => { if (o.isMesh) o.castShadow = o.receiveShadow = true; });
+    scene.add(g);
+  }
+
   // ---------- Photo corner: camera on tripod + two round LED lights between columns B3 and B2 ----------
   // Everything aims west at the brown feature wall (x = 3.33), centred on z = 5.3.
   const studio = new THREE.Group();
@@ -1455,6 +1538,7 @@
     stock:     { pos: [8.4, 1.9, 3.2],    target: [11.2, 0.9, 1.4] },
     lounge:    { pos: [7.3, 1.7, 7.5],    target: [10.6, 0.6, 9.6] },
     terrace:   { pos: [13.6, 2.6, D + 4.6], target: [6.5, 0.6, D + 0.6] },
+    bar:       { pos: [8.9, 1.65, 2.6],   target: [9.6, 1.0, 0.2] },
   };
   let tween = null;
   function goTo(name) {
